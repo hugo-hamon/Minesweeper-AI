@@ -46,7 +46,18 @@ class Game:
 
         return board
     
+    def get_board(self) -> list[list[Cell]]:
+        """Return the board"""
+        return self.board
+    
+    def get_board_size(self) -> tuple[int, int]:
+        """Return the board size"""
+        return self.config.game.width, self.config.game.height
+    
     # Commands
+    def run(self) -> None:
+        pass
+
     def reset(self) -> None:
         """Reset the game"""
         self.board = self.create_board()

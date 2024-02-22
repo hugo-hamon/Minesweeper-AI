@@ -4,7 +4,7 @@ from typing import Optional
 from ..config import Config
 
 
-class UserManager(Manager):
+class HumanManager(Manager):
 
     def __init__(self, config: Config) -> None:
         super().__init__(config)

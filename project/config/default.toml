@@ -2,13 +2,14 @@
 algorithm = "human"
 
 [graphics]
-width = 720
-height = 720
+graphic_enabled = true
+screen_width = 1000
+screen_height = 1000
 fps = 120
 title = "MineSweeper"
-icon_path = "asset/images/icon.png"
+icon_path = "asset/images/icon.svg"
 
 [game]
-width = 10
-height = 10
+width = 20
+height = 15
 mines_percentage = 0.15

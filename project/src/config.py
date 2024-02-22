@@ -10,8 +10,9 @@ class User:
 
 @dataclass
 class Graphics:
-    width: int
-    height: int
+    graphic_enabled: bool
+    screen_width: int
+    screen_height: int
     fps: int
     title: str
     icon_path: str
