@@ -19,8 +19,8 @@ class App:
         )
 
         if self.config.graphics.graphic_enabled:
-            game = GraphicGame(self.config, manager.get_move)
+            game = GraphicGame(self.config, manager)
         else:
-            game = Game(self.config, manager.get_move)
+            game = Game(self.config, manager)
         
         game.run()

@@ -1,13 +1,18 @@
+from __future__ import annotations
 from ..utils.game_func import get_number_of_mines
 from .cell import Cell, CellState
-from typing import Callable
 from ..config import Config
+from typing import TYPE_CHECKING
 import random
+
+if TYPE_CHECKING:
+    from ..manager.manager import Manager
+
 
 
 class Game:
 
-    def __init__(self, config: Config, controller: Callable) -> None:
+    def __init__(self, config: Config, controller: Manager) -> None:
         self.config = config
         self.controller = controller
 
@@ -15,6 +20,8 @@ class Game:
 
         self.is_game_over = False
         self.is_game_won = False
+
+        self.reveal_random_cell()
 
     # Requests
     def create_board(self) -> list[list[Cell]]:
@@ -42,19 +49,44 @@ class Game:
         for y in range(self.config.game.height):
             for x in range(self.config.game.width):
                 if not board[y][x].get_is_mine():
-                    board[y][x].set_value(get_number_of_mines(board, x, y, self.config))
+                    board[y][x].set_value(
+                        get_number_of_mines(board, x, y, self.config))
 
         return board
-    
+
     def get_board(self) -> list[list[Cell]]:
         """Return the board"""
         return self.board
-    
+
     def get_board_size(self) -> tuple[int, int]:
         """Return the board size"""
         return self.config.game.width, self.config.game.height
-    
+
+    def check_win(self) -> bool:
+        """Check if the game is won"""
+        for row in self.board:
+            for cell in row:
+                if not cell.get_is_mine() and cell.get_state() != CellState.REVEALED:
+                    return False
+        return True
+
+    def get_cells(self) -> list[Cell]:
+        """Return the cells"""
+        cells = []
+        for row in self.board:
+            for cell in row:
+                cells.append(cell)
+        return cells
+
     # Commands
+    def update(self) -> None:
+        """Update the game"""
+        while not self.is_game_over and not self.is_game_won:
+            move = self.controller.get_move(self)
+            if move is not None:
+                x, y = move
+                self.reveal(x, y)
+
     def run(self) -> None:
         pass
 
@@ -64,6 +96,50 @@ class Game:
         self.is_game_over = False
         self.is_game_won = False
 
+    def flag(self, x: int, y: int) -> None:
+        """Flag the cell if unflagged, unflag if flagged"""
+        if not self.is_game_over:
+            cell = self.board[y][x]
+            if cell.get_state() == CellState.HIDDEN:
+                cell.set_state(CellState.FLAGGED)
+            elif cell.get_state() == CellState.FLAGGED:
+                cell.set_state(CellState.HIDDEN)
+
+    def reveal(self, x: int, y: int) -> None:
+        """Reveal the cell"""
+        if not self.is_game_over:
+            cell = self.board[y][x]
+            if cell.get_state() == CellState.HIDDEN:
+                cell.set_state(CellState.REVEALED)
+
+                if cell.get_is_mine():
+                    self.is_game_over = True
+                else:
+                    self.is_game_won = self.check_win()
+
+                self.expand(x, y)
+
+    def expand(self, x: int, y: int) -> None:
+        """recursively reveal cells with value 0"""
+        if self.board[y][x].get_value() == 0:
+            for dx in [-1, 0, 1]:
+                for dy in [-1, 0, 1]:
+                    new_x = x + dx
+                    new_y = y + dy
+                    if 0 <= new_x < self.config.game.width and 0 <= new_y < self.config.game.height:
+                        self.reveal(new_x, new_y)
+
+    def reveal_random_cell(self) -> None:
+        """Reveal a random cell with value 0"""
+        cells_with_position = [
+            (cell, (j, i)) for i, row in enumerate(self.board) for j, cell in enumerate(row) if cell.get_value() == 0
+        ]
+        random.shuffle(cells_with_position)
+        for cell, (i, j) in cells_with_position:
+            if cell.get_state() == CellState.HIDDEN and cell.get_is_mine() == False:
+                self.reveal(i, j)
+                break
+
     # Utils
     def get_max_mines(self) -> int:
         """Return the maximum number of mines"""
@@ -71,7 +147,7 @@ class Game:
             self.config.game.width * self.config.game.height *
             self.config.game.mines_percentage
         )
-    
+
     def display_board(self) -> None:
         """Display the board"""
         for row in self.board:

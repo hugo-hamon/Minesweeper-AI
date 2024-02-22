@@ -1,16 +1,19 @@
+from __future__ import annotations
 from ..game.cell import CellState
+from typing import TYPE_CHECKING
 from ..game.game import Game
 from ..config import Config
-from typing import Callable
 import pygame as pg
+
+if TYPE_CHECKING:
+    from ..manager.manager import Manager
 
 
 BACKGROUND_COLOR = (66, 71, 105)
-TILE_SCALE = 1.1
 
 class GraphicGame(Game):
 
-    def __init__(self, config: Config, controller: Callable) -> None:
+    def __init__(self, config: Config, controller: Manager) -> None:
         super().__init__(config, controller)
         pg.init()
 
@@ -64,12 +67,17 @@ class GraphicGame(Game):
                 if event.type == pg.QUIT:
                     self.running = False
                 elif event.type == pg.MOUSEBUTTONDOWN:
-                    # if right click
                     if event.button == 3:
-                        print("right click")
+                        x, y = self.get_tile(*event.pos)
+                        if x != -1 and y != -1:
+                            self.flag(x, y)
                     if event.button == 1:
                         x, y = self.get_tile(*event.pos)
-                        print(f"left click on {x}, {y}")
+                        if x != -1 and y != -1:
+                            self.reveal(x, y)
+                            # self.controller.set_move(self, x, y)
+            
+            # self.update()
 
             self.draw_tiles()
             self.screen.blit(self.canvas, (0, 0))
@@ -111,7 +119,7 @@ class GraphicGame(Game):
 
                 scale = 1
                 if tile_x < mouse_x < tile_x + tile_width and tile_y < mouse_y < tile_y + tile_height:
-                    scale = TILE_SCALE 
+                    scale = 1.1
                 image = pg.transform.scale(
                     image, (int(tile_width * scale), int(tile_height * scale))
                 )
@@ -140,7 +148,7 @@ class GraphicGame(Game):
             width = max_width
             height = int((max_width / row_number) * column_number)
 
-        tile_padding = int(0.006 * max(width, height))
+        tile_padding = int(0.005 * max(width, height))
         tile_padding = max(1, min(10, tile_padding))
 
         return width, height, tile_padding
