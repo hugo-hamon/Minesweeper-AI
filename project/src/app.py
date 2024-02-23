@@ -1,5 +1,6 @@
 from .graphics.graphic_game import GraphicGame
 from .utils.manager_func import match_manager
+from .trainer.cnn_trainer import CNNTrainer
 from .config import load_config
 from .game.game import Game
 import logging
@@ -12,6 +13,9 @@ class App:
 
     def run(self) -> None:
         """Run the app with the given config"""
+        if self.config.cnn.train_enabled:
+            trainer = CNNTrainer(self.config)
+            trainer.train()
 
         manager = match_manager(self.config)
         logging.info(

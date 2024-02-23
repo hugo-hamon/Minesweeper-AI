@@ -10,7 +10,7 @@ class HumanManager(Manager):
         super().__init__(config)
         self.current_move = None
 
-    def set_move(self, move: tuple[int, int]) -> None:
+    def set_move(self, game: Game, move: tuple[int, int]) -> None:
         """Set the current move"""
         self.current_move = move
 

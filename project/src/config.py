@@ -26,10 +26,16 @@ class Game:
 
 
 @dataclass
+class CNN:
+    train_enabled: bool
+
+
+@dataclass
 class Config:
     user: User
     graphics: Graphics
     game: Game
+    cnn: CNN
 
 
 def load_config(config_path: str) -> Config:

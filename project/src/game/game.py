@@ -1,8 +1,8 @@
 from __future__ import annotations
-from ..utils.game_func import get_number_of_mines
+from ..utils.game_func import get_number_of_mines, get_neighbours
 from .cell import Cell, CellState
-from ..config import Config
 from typing import TYPE_CHECKING
+from ..config import Config
 import random
 
 if TYPE_CHECKING:
@@ -77,18 +77,34 @@ class Game:
             for cell in row:
                 cells.append(cell)
         return cells
+    
+    def get_adjacent_cells(self) -> list[tuple[Cell, tuple[int, int]]]:
+        """Return hidden cells with revealed adjacent cells"""
+        cells = []
+        for i, row in enumerate(self.board):
+            for j, cell in enumerate(row):
+                if cell.get_state() == CellState.HIDDEN:
+                    for ncell in get_neighbours(self.board, j, i, self.config):
+                        if ncell.get_state() == CellState.REVEALED:
+                            cells.append((cell, (j, i)))
+                            break
+        return cells
+    
+    def is_game_end(self) -> bool:
+        """Return if the game is over"""
+        return self.is_game_over
 
     # Commands
     def update(self) -> None:
         """Update the game"""
-        while not self.is_game_over and not self.is_game_won:
-            move = self.controller.get_move(self)
-            if move is not None:
-                x, y = move
-                self.reveal(x, y)
+        move = self.controller.get_move(self)
+        if move is not None:
+            x, y = move
+            self.reveal(x, y)
 
     def run(self) -> None:
-        pass
+        while not self.is_game_over and not self.is_game_won:
+            self.update()
 
     def reset(self) -> None:
         """Reset the game"""
@@ -114,10 +130,21 @@ class Game:
 
                 if cell.get_is_mine():
                     self.is_game_over = True
+                    self.reveal_mines()
                 else:
                     self.is_game_won = self.check_win()
+                    if self.is_game_won:
+                        self.is_game_over = True
+                        self.reveal_mines()
 
                 self.expand(x, y)
+
+    def reveal_mines(self) -> None:
+        """Reveal all mines"""
+        for row in self.board:
+            for cell in row:
+                if cell.get_is_mine():
+                    cell.set_state(CellState.REVEALED)
 
     def expand(self, x: int, y: int) -> None:
         """recursively reveal cells with value 0"""
@@ -128,6 +155,7 @@ class Game:
                     new_y = y + dy
                     if 0 <= new_x < self.config.game.width and 0 <= new_y < self.config.game.height:
                         self.reveal(new_x, new_y)
+
 
     def reveal_random_cell(self) -> None:
         """Reveal a random cell with value 0"""

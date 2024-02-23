@@ -1,5 +1,5 @@
 [user]
-algorithm = "human"
+algorithm = "cnn"
 
 [graphics]
 graphic_enabled = true
@@ -10,6 +10,9 @@ title = "MineSweeper"
 icon_path = "asset/images/icon.svg"
 
 [game]
-width = 20
-height = 20
+width = 10
+height = 10
 mines_percentage = 0.15
+
+[cnn]
+train_enabled = true

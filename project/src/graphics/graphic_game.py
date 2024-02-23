@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 from ..game.game import Game
 from ..config import Config
 import pygame as pg
+import logging
+import time
 
 if TYPE_CHECKING:
     from ..manager.manager import Manager
@@ -61,6 +63,7 @@ class GraphicGame(Game):
     def run(self) -> None:
         """Run the graphic game"""
         self.running = True
+        start_time = time.time()
 
         while self.running:
             for event in pg.event.get():
@@ -74,11 +77,20 @@ class GraphicGame(Game):
                     if event.button == 1:
                         x, y = self.get_tile(*event.pos)
                         if x != -1 and y != -1:
-                            self.reveal(x, y)
-                            # self.controller.set_move(self, x, y)
+                            self.controller.set_move(self, (x, y))
             
-            # self.update()
+            # Update title
+            if self.is_game_won or self.is_game_over:
+                # Affichage de la fin de la partie
+                pg.display.set_caption(f"{self.config.graphics.title} - {elapsed_time} seconds - {'You won' if self.is_game_won else 'You lost'}")
+            else:
+                elapsed_time = int(time.time() - start_time)
+                pg.display.set_caption(f"{self.config.graphics.title} - {elapsed_time} seconds")
 
+            # update game
+            self.update()
+
+            # draw tiles
             self.draw_tiles()
             self.screen.blit(self.canvas, (0, 0))
 

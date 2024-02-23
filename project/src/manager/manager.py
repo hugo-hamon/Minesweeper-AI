@@ -16,7 +16,7 @@ class Manager(ABC):
         return NotImplemented
     
     @abstractmethod
-    def set_move(self, game: Game, x: int, y: int) -> None:
+    def set_move(self, game: Game, move: tuple[int, int]) -> None:
         """Set a move for a given algorithm"""
         return NotImplemented
     
