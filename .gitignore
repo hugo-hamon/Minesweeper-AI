@@ -153,7 +153,13 @@ dmypy.json
 cython_debug/
 
 # Model
-.pth
+*.pth
+
+# gif
+.gif
+
+# screenshot png
+screenshot/*.png
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
