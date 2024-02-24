@@ -1,5 +1,5 @@
 from __future__ import annotations
-from ..utils.game_func import get_number_of_mines, get_neighbours
+from ..utils.game_func import get_number_of_mines, get_neighbours, get_neighbours_coords
 from .cell import Cell, CellState
 from typing import TYPE_CHECKING
 from ..config import Config
@@ -7,7 +7,6 @@ import random
 
 if TYPE_CHECKING:
     from ..manager.manager import Manager
-
 
 
 class Game:
@@ -77,7 +76,7 @@ class Game:
             for cell in row:
                 cells.append(cell)
         return cells
-    
+
     def get_adjacent_cells(self) -> list[tuple[Cell, tuple[int, int]]]:
         """Return hidden cells with revealed adjacent cells"""
         cells = []
@@ -89,10 +88,18 @@ class Game:
                             cells.append((cell, (j, i)))
                             break
         return cells
-    
+
     def is_game_end(self) -> bool:
         """Return if the game is over"""
         return self.is_game_over
+
+    def get_exploded_cell(self) -> tuple[int, int]:
+        """Return the exploded cell"""
+        for i, row in enumerate(self.board):
+            for j, cell in enumerate(row):
+                if cell.get_state() == CellState.REVEALED and cell.get_is_mine():
+                    return j, i
+        return -1, -1
 
     # Commands
     def update(self) -> None:
@@ -131,6 +138,7 @@ class Game:
                 if cell.get_is_mine():
                     self.is_game_over = True
                     self.reveal_mines()
+                    cell.set_state(CellState.REVEALED)
                 else:
                     self.is_game_won = self.check_win()
                     if self.is_game_won:
@@ -144,7 +152,7 @@ class Game:
         for row in self.board:
             for cell in row:
                 if cell.get_is_mine():
-                    cell.set_state(CellState.REVEALED)
+                    cell.set_state(CellState.EXPLODED)
 
     def expand(self, x: int, y: int) -> None:
         """recursively reveal cells with value 0"""
@@ -155,7 +163,6 @@ class Game:
                     new_y = y + dy
                     if 0 <= new_x < self.config.game.width and 0 <= new_y < self.config.game.height:
                         self.reveal(new_x, new_y)
-
 
     def reveal_random_cell(self) -> None:
         """Reveal a random cell with value 0"""

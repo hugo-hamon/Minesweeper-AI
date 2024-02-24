@@ -16,6 +16,8 @@ class Graphics:
     fps: int
     title: str
     icon_path: str
+    delay: float
+    screen_capture: bool
 
 
 @dataclass

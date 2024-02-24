@@ -4,14 +4,15 @@ from typing import TYPE_CHECKING
 from ..game.game import Game
 from ..config import Config
 import pygame as pg
-import logging
 import time
+import os
 
 if TYPE_CHECKING:
     from ..manager.manager import Manager
 
 
 BACKGROUND_COLOR = (66, 71, 105)
+
 
 class GraphicGame(Game):
 
@@ -39,10 +40,16 @@ class GraphicGame(Game):
         self.images["mine"] = pg.image.load("asset/images/mine.png")
         self.images["flag"] = pg.image.load("asset/images/flag.png")
         self.images["empty"] = pg.image.load("asset/images/empty.png")
+        self.images["red_mine"] = pg.image.load("asset/images/red_mine.png")
         self.images["undiscovered"] = pg.image.load(
             "asset/images/undiscovered.png")
 
         self.running = False
+        self.last_update = 0
+
+        png_dir = 'asset/screenshot'
+        if not os.path.exists(png_dir):
+            os.makedirs(png_dir)
 
     # Requests
     def get_tile_width(self) -> float:
@@ -64,7 +71,7 @@ class GraphicGame(Game):
         """Run the graphic game"""
         self.running = True
         start_time = time.time()
-
+        need_screenshot = False
         while self.running:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -78,21 +85,29 @@ class GraphicGame(Game):
                         x, y = self.get_tile(*event.pos)
                         if x != -1 and y != -1:
                             self.controller.set_move(self, (x, y))
-            
+
             # Update title
             if self.is_game_won or self.is_game_over:
                 # Affichage de la fin de la partie
-                pg.display.set_caption(f"{self.config.graphics.title} - {elapsed_time} seconds - {'You won' if self.is_game_won else 'You lost'}")
+                pg.display.set_caption(
+                    f"{self.config.graphics.title} - {elapsed_time} seconds - {'You won' if self.is_game_won else 'You lost'}")
             else:
                 elapsed_time = int(time.time() - start_time)
-                pg.display.set_caption(f"{self.config.graphics.title} - {elapsed_time} seconds")
+                pg.display.set_caption(
+                    f"{self.config.graphics.title} - {elapsed_time} seconds")
 
             # update game
-            self.update()
+            if time.time() - self.last_update > self.config.graphics.delay:
+                self.update()
+                self.last_update = time.time()
+                need_screenshot = True
 
             # draw tiles
             self.draw_tiles()
             self.screen.blit(self.canvas, (0, 0))
+            if need_screenshot and self.config.graphics.screen_capture:
+                pg.image.save(self.canvas, f"asset/screenshot/{time.time()}.png")
+                need_screenshot = False
 
             self.canvas.fill(BACKGROUND_COLOR)
             pg.display.update()
@@ -122,8 +137,10 @@ class GraphicGame(Game):
                     image = self.images["flag"]
                 elif state == CellState.HIDDEN:
                     image = self.images["undiscovered"]
-                elif state == CellState.REVEALED and tile.get_is_mine():
+                elif state == CellState.EXPLODED:
                     image = self.images["mine"]
+                elif state == CellState.REVEALED and tile.get_is_mine():
+                    image = self.images["red_mine"]
                 elif state == CellState.REVEALED and value == 0:
                     image = self.images["empty"]
                 else:

@@ -1,5 +1,5 @@
 [user]
-algorithm = "human"
+algorithm = "rule_based"
 
 [graphics]
 graphic_enabled = true
@@ -9,12 +9,12 @@ fps = 120
 title = "MineSweeper"
 icon_path = "asset/images/icon.svg"
 delay = 0.1
-screen_capture = false
+screen_capture = true
 
 [game]
-width = 15
-height = 15
-mines_percentage = 0.1
+width = 20
+height = 20
+mines_percentage = 0.15
 
 [cnn]
 train_enabled = false

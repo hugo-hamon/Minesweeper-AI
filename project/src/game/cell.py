@@ -5,6 +5,7 @@ class CellState(Enum):
     HIDDEN = 0
     REVEALED = 1
     FLAGGED = 2
+    EXPLODED = 3
 
 
 class Cell:
