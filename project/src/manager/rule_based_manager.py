@@ -5,6 +5,7 @@ from ..game.game import Game
 from typing import Optional
 from ..config import Config
 import numpy as np
+import operator
 import random
 
 
@@ -22,23 +23,23 @@ class RuleBasedManager(Manager):
 
     def get_move(self, game: Game) -> Optional[tuple[int, int]]:
         """Return the current move"""
+        if game.is_game_end():
+            return None
         self.basic_strategy_flag(game)
         self.group_strategy_flag(game)
 
         move = self.basic_strategy_reveal(game)
         if move is not None:
             return move
-        
+
         move = self.group_strategy_reveal(game)
         if move is not None:
             return move
-        
-        # Human move
-        if self.current_move is None:
-            return None
-        move = self.current_move
-        self.current_move = None
 
+        # if flagged := self.cluster_strategy(game):
+        #     return None
+
+        move = self.random_move(game)
         return move
     
     def basic_strategy_flag(self, game: Game) -> None:
@@ -129,7 +130,44 @@ class RuleBasedManager(Manager):
                 for nx, ny in intersection_a:
                     return (nx, ny)
         return None
+    
 
+    # TODO: Test this method
+    def cluster_strategy(self, game: Game) -> bool:
+        """Flag cells based on cluster strategy"""
+        clusters = game.get_clusters()
+        for cluster in clusters:
+            adjacent_cells = game.get_adjacent_cells_from_cluster(cluster)
+            adjactent_cells_size = len(adjacent_cells)
+
+            if adjactent_cells_size <= 20:
+                probs = {
+                    adjactent_cell: 0 for adjactent_cell in adjacent_cells
+                }
+                arrangements = game.get_arrangements(cluster)
+                for arrangement in arrangements:
+                    arrangement = [cell for _, cell in arrangement]
+                    for adjactent_cell in adjacent_cells:
+                        if adjactent_cell in arrangement:
+                            probs[adjactent_cell] += 1
+
+                # Flag cells with the highest probability
+                max_prob_key = max(probs.items(), key=operator.itemgetter(1))[0]
+                print(f"Flagging cell {max_prob_key}")
+                game.flag(max_prob_key[0], max_prob_key[1])
+                return True
+        return False
+
+    def random_move(self, game: Game) -> tuple[int, int]:
+        """Return a random move"""
+        board = game.get_board()
+        for y in range(self.config.game.height):
+            for x in range(self.config.game.width):
+                cell = board[y][x]
+                if cell.get_state() == CellState.HIDDEN:
+                    return (x, y)
+        return (0, 0)
+                
     
     def get_pairs(self, game: Game) -> list[tuple[int, int, int, int]]:
         """Return the pairs of cells"""
@@ -144,9 +182,8 @@ class RuleBasedManager(Manager):
                     neighbours = get_neighbours_coords(x, y, self.config)
                     for nx, ny in neighbours:
                         ncell = board[ny][nx]
-                        if ncell.get_state() == CellState.REVEALED and ncell.get_value() > 0:
-                            if (nx, ny, x, y) not in pairs and (x, y, nx, ny) not in pairs:
-                                pairs.append((x, y, nx, ny))
+                        if ncell.get_state() == CellState.REVEALED and ncell.get_value() > 0 and ((nx, ny, x, y) not in pairs and (x, y, nx, ny) not in pairs):
+                            pairs.append((x, y, nx, ny))
         return pairs
 
     def get_non_flagged_neighbours(self, x: int, y: int, game: Game) -> list[tuple[int, int]]:

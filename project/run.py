@@ -31,3 +31,4 @@ if __name__ == "__main__":
     
     app = App(path)
     app.run()
+    # app.test_performance()

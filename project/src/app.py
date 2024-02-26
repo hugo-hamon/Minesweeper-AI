@@ -28,3 +28,21 @@ class App:
             game = Game(self.config, manager)
         
         game.run()
+
+    def test_performance(self) -> None:
+        """Test the performance of the algorithm"""
+        epochs = 100
+        manager = match_manager(self.config)
+        game = Game(self.config, manager)
+        wins = 0
+        for k in range(epochs):
+            manager.reset()
+            game.reset()
+            game.run()
+            if game.is_game_won:
+                wins += 1
+            if (k + 1) % 10 == 0:
+                logging.info(f"Game {k + 1}, win rate: {wins/(k + 1):.2f}")
+        
+        logging.info(f"Win rate: {wins/epochs:.2f}")
+                

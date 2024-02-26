@@ -9,7 +9,7 @@ fps = 120
 title = "MineSweeper"
 icon_path = "asset/images/icon.svg"
 delay = 0.1
-screen_capture = true
+screen_capture = false
 
 [game]
 width = 20

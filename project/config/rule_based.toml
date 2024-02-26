@@ -9,12 +9,12 @@ fps = 120
 title = "MineSweeper"
 icon_path = "asset/images/icon.svg"
 delay = 0.1
-screen_capture = true
+screen_capture = false
 
 [game]
-width = 20
-height = 20
-mines_percentage = 0.15
+width = 30
+height = 16
+mines_percentage = 0.20625
 
 [cnn]
 train_enabled = false
