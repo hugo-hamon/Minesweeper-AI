@@ -1,4 +1,5 @@
 from ..utils.game_func import get_neighbours_coords
+from ..trainer.cnn_model import CNN
 from ..game.cell import CellState
 from .manager import Manager
 from ..game.game import Game
@@ -8,12 +9,12 @@ import numpy as np
 import operator
 import random
 
+class CNNRuleBasedManager(Manager):
 
-class RuleBasedManager(Manager):
-
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, model: CNN) -> None:
         super().__init__(config)
         self.current_move = None
+        self.model = model
 
         self.visited = np.zeros(
             (self.config.game.height, self.config.game.width))
@@ -34,17 +35,7 @@ class RuleBasedManager(Manager):
             return move
 
         move = self.group_strategy_reveal(game)
-        if move is not None:
-            return move
-
-        move, flag = self.cluster_strategy(game)
-        if move is not None:
-            return move
-        if flag:
-            return None
-
-        move = self.random_move(game)
-        return move
+        return move if move is not None else None
 
     def basic_strategy_flag(self, game: Game) -> None:
         """Flag cells based on basic strategy"""
@@ -138,64 +129,6 @@ class RuleBasedManager(Manager):
                     return (nx, ny)
         return None
 
-    def cluster_strategy(self, game: Game) -> tuple[Optional[tuple[int, int]], bool]:
-        """Flag cells based on cluster strategy"""
-        clusters = game.get_clusters()
-        for cluster in clusters:
-            adjacent_cells = game.get_adjacent_cells_from_cluster(cluster)
-            adjactent_cells_size = len(adjacent_cells)
-            if adjactent_cells_size <= 20 and adjactent_cells_size > 0:
-                return self.probability_move(game, cluster, adjacent_cells)
-        return None, False
-
-    def probability_move(self, game: Game, cluster: list[tuple[int, int]], adjacent_cells: list[tuple[int, int]]) -> tuple[Optional[tuple[int, int]], bool]:
-        """Return a move based on the probability of a cell being a mine"""
-        arrangements = game.get_arrangements(cluster)
-        if len(arrangements) == 0:
-            return None, False
-        probs = {
-            cell_coords: 0. for cell_coords in adjacent_cells
-        }
-        total = 0
-        for arrangement in arrangements:
-            cells = [cell_coords for _, cell_coords in arrangement]
-            for x, y in cells:
-                if (x, y) not in probs:
-                    probs[(x, y)] = 0
-                probs[(x, y)] += 1
-                total += 1
-        probs = {cell_coords: prob / total for cell_coords, prob in probs.items()}
-        mean = sum(probs.values()) / len(probs)
-
-        # Check for a zero probability
-        eps = 1e-3
-        for cell_coords, prob in probs.items():
-            if prob < eps:
-                return cell_coords, False
-            
-        mean_diff = [
-            (cell_coords, abs(prob - mean), prob > mean) for cell_coords, prob in probs.items()
-        ]
-        
-        mean_diff.sort(key=operator.itemgetter(1), reverse=True)
-        coords, prob_diff, to_flag = mean_diff[0]
-        if to_flag:
-            game.flag(*coords)
-            return None, True
-        
-        return coords, False
-
-
-    def random_move(self, game: Game) -> tuple[int, int]:
-        """Return a random move"""
-        board = game.get_board()
-        unrevealed_cells = []
-        for y in range(self.config.game.height):
-            for x in range(self.config.game.width):
-                cell = board[y][x]
-                if cell.get_state() == CellState.HIDDEN:
-                    unrevealed_cells.append((x, y))
-        return random.choice(unrevealed_cells)
 
     def get_pairs(self, game: Game) -> list[tuple[int, int, int, int]]:
         """Return the pairs of cells"""
@@ -240,4 +173,5 @@ class RuleBasedManager(Manager):
         """Reset the manager"""
         self.current_move = None
         self.visited = np.zeros(
-            (self.config.game.height, self.config.game.width))
+            (self.config.game.height, self.config.game.width)
+        )

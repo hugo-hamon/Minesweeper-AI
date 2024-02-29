@@ -35,10 +35,6 @@ class CNN(nn.Module):
             num_hidden, 1, kernel_size=1, stride=1, padding="same"
         )
 
-        model_tmp_path = "model/cnn/temp"
-        if not os.path.exists(model_tmp_path):
-            os.makedirs(model_tmp_path)
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
@@ -60,6 +56,10 @@ class CNNTrainer:
         self.model = CNN(10, NUM_HIDDEN).to(self.device)
         self.criterion = nn.MSELoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
+
+        model_tmp_path = "model/cnn/temp"
+        if not os.path.exists(model_tmp_path):
+            os.makedirs(model_tmp_path)
 
     def train(self) -> None:
         states, values = self.generate_data(GAME_SIMULATION)
@@ -86,17 +86,17 @@ class CNNTrainer:
             if i % 10 == 0:
                 sns.set_theme()
                 plt.plot(losses)
-                plt.savefig("model/cnn/loss.png")
+                plt.savefig("model/cnn/cnn_loss.png")
             if i % 50 == 0:
-                self.save_model(f"model/cnn/temp/model_{i}.pth")
+                self.save_model(f"model/cnn/temp/cnn_model_{i}.pth")
 
         logging.info("Training done")
 
         sns.set_theme()
         plt.plot(losses)
-        plt.savefig("model/cnn/loss.png")
+        plt.savefig("model/cnn/cnn_loss.png")
 
-        self.save_model("model/cnn/model.pth")
+        self.save_model("model/cnn/cnn_model.pth")
 
     def predict(self, states: np.ndarray) -> np.ndarray:
         self.model.eval()

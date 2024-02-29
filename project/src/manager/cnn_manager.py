@@ -13,7 +13,7 @@ class CNNManager(Manager):
         self.current_move = None
 
         self.model = CNNTrainer(config)
-        self.model.load_model("model/cnn/model.pth")
+        self.model.load_model("model/cnn/cnn_model.pth")
 
     def set_move(self, game: Game, move: tuple[int, int]) -> None:
         """Set the current move"""

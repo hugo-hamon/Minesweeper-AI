@@ -31,6 +31,10 @@ class Game:
 class CNN:
     train_enabled: bool
 
+@dataclass
+class CNNRuleBased:
+    train_enabled: bool
+
 
 @dataclass
 class Config:
@@ -38,6 +42,7 @@ class Config:
     graphics: Graphics
     game: Game
     cnn: CNN
+    cnn_rule_based: CNNRuleBased
 
 
 def load_config(config_path: str) -> Config:

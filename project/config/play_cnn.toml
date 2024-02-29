@@ -18,3 +18,6 @@ mines_percentage = 0.1
 
 [cnn]
 train_enabled = false
+
+[cnn_rule_based]
+train_enabled = false

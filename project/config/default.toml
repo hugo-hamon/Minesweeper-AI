@@ -2,7 +2,7 @@
 algorithm = "human"
 
 [graphics]
-graphic_enabled = true
+graphic_enabled = false
 screen_width = 1000
 screen_height = 1000
 fps = 120
@@ -12,9 +12,12 @@ delay = 0
 screen_capture = false
 
 [game]
-width = 20
-height = 20
+width = 16
+height = 16
 mines_percentage = 0.15
 
 [cnn]
 train_enabled = false
+
+[cnn_rule_based]
+train_enabled = true

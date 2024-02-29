@@ -12,9 +12,12 @@ delay = 0
 screen_capture = false
 
 [game]
-width = 20
-height = 20
-mines_percentage = 0.21
+width = 8
+height = 8
+mines_percentage = 0.15625
 
 [cnn]
+train_enabled = false
+
+[cnn_rule_based]
 train_enabled = false

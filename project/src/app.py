@@ -1,3 +1,4 @@
+from .trainer.cnn_rule_based_trainer import CNNRuledBasedTrainer
 from .graphics.graphic_game import GraphicGame
 from .utils.manager_func import match_manager
 from .trainer.cnn_trainer import CNNTrainer
@@ -16,6 +17,9 @@ class App:
         if self.config.cnn.train_enabled:
             trainer = CNNTrainer(self.config)
             trainer.train()
+        if self.config.cnn_rule_based.train_enabled:
+            trainer = CNNRuledBasedTrainer(self.config)
+            trainer.train()
 
         manager = match_manager(self.config)
         logging.info(
@@ -31,7 +35,7 @@ class App:
 
     def test_performance(self) -> None:
         """Test the performance of the algorithm"""
-        epochs = 100
+        epochs = 1000
         manager = match_manager(self.config)
         game = Game(self.config, manager)
         wins = 0
@@ -45,4 +49,5 @@ class App:
                 logging.info(f"Game {k + 1}, win rate: {wins/(k + 1):.2f}")
         
         logging.info(f"Win rate: {wins/epochs:.2f}")
+        
                 
