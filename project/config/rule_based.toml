@@ -5,16 +5,16 @@ algorithm = "rule_based"
 graphic_enabled = true
 screen_width = 1000
 screen_height = 1000
-fps = 120
+fps = 240
 title = "MineSweeper"
 icon_path = "asset/images/icon.svg"
-delay = 0.1
+delay = 0
 screen_capture = false
 
 [game]
-width = 30
-height = 16
-mines_percentage = 0.20625
+width = 20
+height = 20
+mines_percentage = 0.21
 
 [cnn]
 train_enabled = false

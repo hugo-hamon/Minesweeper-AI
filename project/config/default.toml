@@ -14,7 +14,7 @@ screen_capture = false
 [game]
 width = 20
 height = 20
-mines_percentage = 0.1
+mines_percentage = 0.15
 
 [cnn]
 train_enabled = false
