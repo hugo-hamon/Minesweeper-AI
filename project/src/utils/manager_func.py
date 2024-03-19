@@ -1,3 +1,4 @@
+from ..manager.cnn_rule_based_manager import CNNRuleBasedManager
 from ..manager.rule_based_manager import RuleBasedManager
 from ..manager.human_manager import HumanManager
 from ..manager.cnn_manager import CNNManager
@@ -14,5 +15,7 @@ def match_manager(config: Config) -> Manager:
             return CNNManager(config)
         case "rule_based":
             return RuleBasedManager(config)
+        case "cnn_rule_based":
+            return CNNRuleBasedManager(config)
         case _:
             raise ValueError("Invalid algorithm")

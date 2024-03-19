@@ -1,4 +1,4 @@
-from ..manager.cnn_rule_based_manager import CNNRuleBasedManager
+from ..manager.rule_based_manager import RuleBasedManager
 from torch.utils.data import DataLoader, TensorDataset
 from ..game.cell import CellState
 import torch.nn.functional as F
@@ -15,7 +15,7 @@ import torch
 import os
 
 NUM_HIDDEN = 75
-TRAINING_ITERATIONS = 10000
+TRAINING_ITERATIONS = 1000
 
 
 class CNNRuledBasedTrainer:
@@ -36,15 +36,16 @@ class CNNRuledBasedTrainer:
         if not os.path.exists(model_tmp_path):
             os.makedirs(model_tmp_path)
 
+
     def train(self) -> None:
         """Train the model by playing games and generating data"""
         states = []
         values = []
         # Generate data
         for iteration in range(TRAINING_ITERATIONS):
-            if iteration % 100 == 0:
+            if iteration % 10 == 0:
                 logging.info(f"----Iteration {iteration}----")
-            manager = CNNRuleBasedManager(self.config, self.model)
+            manager = RuleBasedManager(self.config, use_random_move=False)
             game = Game(self.config, manager)
             while not game.is_game_end():
                 move = manager.get_move(game)
@@ -103,6 +104,15 @@ class CNNRuledBasedTrainer:
         plt.plot(losses)
         plt.savefig("model/cnn/cnn_rule_based_loss.png")
         self.save_model("model/cnn/cnn_rule_based_model.pth")
+
+
+    def predict(self, states: np.ndarray) -> np.ndarray:
+        self.model.eval()
+        with torch.no_grad():
+            output = self.model(torch.tensor(
+                states, dtype=torch.float32).to(self.device))
+            output = output.cpu()
+            return output.numpy()
 
     
     def get_state(self, game: Game) -> np.ndarray:
