@@ -1,4 +1,5 @@
 from src.app import App
+import argparse
 import logging
 import sys
 import os
@@ -20,15 +21,21 @@ if __name__ == "__main__":
     logging.basicConfig(**LOGGING_CONFIG)
     logging.info("Starting run.py")
 
-    argv = len(sys.argv)
+    parser = argparse.ArgumentParser(description="Minesweeper game")
+    parser.add_argument("--config", type=str, help="Path to the config file")
+    parser.add_argument("--test", action="store_true", help="Test the performance of the model")
+    args = parser.parse_args()
+
     path = DEFAULT_CONFIG_PATH
-    if argv == 2:
-        path = sys.argv[1]
+    if args.config:
+        path = args.config
         path = f"config/{path}.toml"
         logging.info(f"Using config path : {path}")
     else:
         logging.info(f"Using default config path : {path}")
-    
+
     app = App(path)
-    app.run()
-    # app.test_performance()
+    if args.test:
+        app.test_performance()
+    else:
+        app.run()

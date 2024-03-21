@@ -1,23 +1,26 @@
+from ..trainer.cnn_rule_based_trainer import CNNRuledBasedTrainer
 from ..utils.game_func import get_neighbours_coords
-from ..trainer.cnn_model import CNN
 from ..game.cell import CellState
 from .manager import Manager
 from ..game.game import Game
 from typing import Optional
 from ..config import Config
 import numpy as np
-import operator
+import itertools
 import random
+
 
 class CNNRuleBasedManager(Manager):
 
-    def __init__(self, config: Config, model: CNN) -> None:
+    def __init__(self, config: Config) -> None:
         super().__init__(config)
         self.current_move = None
-        self.model = model
 
         self.visited = np.zeros(
             (self.config.game.height, self.config.game.width))
+
+        self.model = CNNRuledBasedTrainer(config)
+        self.model.load_model("model/cnn_rule_based/cnn_rule_based_model.pth")
 
     def set_move(self, game: Game, move: tuple[int, int]) -> None:
         """Set the current move"""
@@ -35,7 +38,26 @@ class CNNRuleBasedManager(Manager):
             return move
 
         move = self.group_strategy_reveal(game)
-        return move if move is not None else None
+        if move is not None:
+            return move
+
+        adjacent_cells = game.get_adjacent_cells()
+        adjactent_mask = np.zeros(
+            (self.config.game.height, self.config.game.width))
+        for _, pos in adjacent_cells:
+            adjactent_mask[pos[1]][pos[0]] = 1
+
+        states = self.model.get_state(game)
+        values = self.model.predict(states)
+
+        values = np.multiply(values, adjactent_mask)
+        move = (0, 0)
+        max_value = -1
+        for y, x in itertools.product(range(self.config.game.height), range(self.config.game.width)):
+            if values[0][y][x] > max_value:
+                max_value = values[0][y][x]
+                move = (x, y)
+        return self.random_move(game) if max_value < 1e-3 else move
 
     def basic_strategy_flag(self, game: Game) -> None:
         """Flag cells based on basic strategy"""
@@ -129,7 +151,6 @@ class CNNRuleBasedManager(Manager):
                     return (nx, ny)
         return None
 
-
     def get_pairs(self, game: Game) -> list[tuple[int, int, int, int]]:
         """Return the pairs of cells"""
         pairs = []
@@ -168,6 +189,17 @@ class CNNRuleBasedManager(Manager):
             if ncell.get_state() == CellState.FLAGGED:
                 flagged_neighbours.append((nx, ny))
         return flagged_neighbours
+
+    def random_move(self, game: Game) -> tuple[int, int]:
+        """Return a random move"""
+        board = game.get_board()
+        unrevealed_cells = []
+        for y in range(self.config.game.height):
+            for x in range(self.config.game.width):
+                cell = board[y][x]
+                if cell.get_state() == CellState.HIDDEN:
+                    unrevealed_cells.append((x, y))
+        return random.choice(unrevealed_cells)
 
     def reset(self) -> None:
         """Reset the manager"""

@@ -11,9 +11,10 @@ import random
 
 class RuleBasedManager(Manager):
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, use_random_move=True) -> None:
         super().__init__(config)
         self.current_move = None
+        self.use_random_move = use_random_move
 
         self.visited = np.zeros(
             (self.config.game.height, self.config.game.width))
@@ -43,8 +44,7 @@ class RuleBasedManager(Manager):
         if flag:
             return None
 
-        move = self.random_move(game)
-        return move
+        return self.random_move(game) if self.use_random_move else None
 
     def basic_strategy_flag(self, game: Game) -> None:
         """Flag cells based on basic strategy"""
@@ -164,7 +164,8 @@ class RuleBasedManager(Manager):
                     probs[(x, y)] = 0
                 probs[(x, y)] += 1
                 total += 1
-        probs = {cell_coords: prob / total for cell_coords, prob in probs.items()}
+        probs = {cell_coords: prob /
+                 total for cell_coords, prob in probs.items()}
         mean = sum(probs.values()) / len(probs)
 
         # Check for a zero probability
@@ -172,21 +173,20 @@ class RuleBasedManager(Manager):
         for cell_coords, prob in probs.items():
             if prob < eps:
                 return cell_coords, False
-            
+
         mean_diff = [
             (cell_coords, abs(prob - mean), prob > mean) for cell_coords, prob in probs.items()
         ]
-        
+
         mean_diff.sort(key=operator.itemgetter(1), reverse=True)
         coords, prob_diff, to_flag = mean_diff[0]
         if to_flag:
             game.flag(*coords)
             return None, True
-        
+
         return coords, False
 
-
-    def random_move(self, game: Game) -> tuple[int, int]:
+    def random_move(self, game: Game) -> Optional[tuple[int, int]]:
         """Return a random move"""
         board = game.get_board()
         unrevealed_cells = []
@@ -195,7 +195,7 @@ class RuleBasedManager(Manager):
                 cell = board[y][x]
                 if cell.get_state() == CellState.HIDDEN:
                     unrevealed_cells.append((x, y))
-        return random.choice(unrevealed_cells)
+        return None if not unrevealed_cells else random.choice(unrevealed_cells)
 
     def get_pairs(self, game: Game) -> list[tuple[int, int, int, int]]:
         """Return the pairs of cells"""
