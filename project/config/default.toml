@@ -2,7 +2,7 @@
 algorithm = "human"
 
 [graphics]
-graphic_enabled = false
+graphic_enabled = true
 screen_width = 1000
 screen_height = 1000
 fps = 120
@@ -20,4 +20,4 @@ mines_percentage = 0.15
 train_enabled = false
 
 [cnn_rule_based]
-train_enabled = true
+train_enabled = false
